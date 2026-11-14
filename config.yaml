@@ -1,0 +1,4 @@
+fastapiImplementationPackage: emulator
+useExternalImplementationPackage: true
+nameMappings:
+  sub: account

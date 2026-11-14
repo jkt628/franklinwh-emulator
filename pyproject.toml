@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "franklinwh-emulator"
+version = "0.1.0"
+description = "Emulator for the FranklinWH Cloud API"
+requires-python = ">=3.11"
+dependencies = ["fastapi[standard]", "hypercorn", "PyJWT", "readerwriterlock"]
+
+[project.scripts]
+franklinwh-emulator = "emulator.main:main"
+
+[tool.hatch.build]
+exclude = [
+  "/env",
+  ".*",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/emulator"]
