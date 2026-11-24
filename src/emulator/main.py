@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
 
-from emulator import hes_gateway, logout
+from emulator import LoginTokenAuth, api_energy, hes_gateway, logout
 
 
 async def async_main():
@@ -14,6 +14,7 @@ async def async_main():
     config.keyfile = "cert.key"
 
     app = FastAPI()
+    app.include_router(api_energy.router, dependencies=[LoginTokenAuth])
     app.include_router(hes_gateway.router)
 
     # this generates an error but it works....

@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import secrets
 from collections import UserDict
+from collections.abc import Generator
 from typing import Annotated, Final
 from zoneinfo import ZoneInfo
 
@@ -12,7 +13,7 @@ from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
-from emulator import Gateway, Site
+from emulator import APower, BadGatewayError, Gateway, Site
 
 from .rwlockeddict import RWLockedDict
 
@@ -56,6 +57,23 @@ class User(BaseModel):
     PII: PII
     sites: list[Site]
 
+    def gateways(self) -> Generator[Gateway]:
+        for s in self.sites:
+            yield from s.gateways
+
+    def gateway(self, gatewayId: str) -> Gateway:
+        for g in self.gateways():
+            if g.id == gatewayId:
+                return g
+        raise BadGatewayError
+
+    def site(self, gatewayId: str) -> tuple[Site, Gateway]:
+        for s in self.sites:
+            for g in s.gateways:
+                if g.id == gatewayId:
+                    return s, g
+        raise BadGatewayError
+
 
 _users: dict[str, User] = {
     JANE_DOE: User(
@@ -74,17 +92,25 @@ _users: dict[str, User] = {
                     Gateway(
                         id="10060005A02X24987654",
                         name="Home",
+                        aPower=[
+                            APower(id="10050011A05X24987654"),
+                            APower(id="10050011A05X24987655"),
+                            APower(id="10050011A05X24987656"),
+                        ],
                     ),
                 ],
             ),
             Site(
-                address="987655 Deer View Road, Boulder, Colorado, United States",
+                address="987664 Deer View Road, Boulder, Colorado, United States",
                 zipCode="80302",
                 tz=ZoneInfo("America/Denver"),
                 gateways=[
                     Gateway(
-                        id="10060005A02X24987655",
+                        id="10060005A02X24987664",
                         name="Cabin",
+                        aPower=[
+                            APower(id="10050011A05X24987664"),
+                        ],
                     ),
                 ],
             ),
@@ -106,6 +132,11 @@ _users: dict[str, User] = {
                     Gateway(
                         id="10060005A02X24654321",
                         name="654321 Main Street",
+                        aPower=[
+                            APower(id="10050011A05X24654321"),
+                            APower(id="10050011A05X24654322"),
+                            APower(id="10050011A05X24654323"),
+                        ],
                     ),
                 ],
             ),
@@ -120,6 +151,16 @@ for u in _users.values():
     for site in u.sites:
         site.id = int(site.gateways[0].id[-6:])
         site.name = site.gateways[0].name
+        if u.account == JANE_DOE:
+            # both sites installed Generator Module
+            site.gateways[0].stats.generator.sn = (
+                "10070016A00X25" + site.gateways[0].id[-6:]
+            )
+            site.gateways[0].stats.generator.genStat = 1
+# Home also installed Smart Circuits Module
+_users[JANE_DOE].sites[0].gateways[0].stats.circuits.sn = (
+    "10070015A00X25" + _users[JANE_DOE].sites[1].gateways[0].id[-6:]
+)
 
 
 logintoken = APIKeyHeader(name="logintoken")
@@ -199,3 +240,12 @@ async def logout():
     while True:
         await asyncio.sleep(10 * 60)  # 10 minutes
         _tokens.clear()
+
+
+async def bump():
+    while True:
+        await asyncio.sleep(60)  # 1 minute
+        for user in _users.values():
+            for site in user.sites:
+                for gateway in site.gateways:
+                    gateway.bump()

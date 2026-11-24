@@ -23,8 +23,7 @@ class SiteAndDeviceInfoResult(BaseModel):
     basicDeviceInfoVOList: list[DeviceInfo]
 
 
-class SiteAndDeviceInfoResponse(ResponseWithTotal[list[SiteAndDeviceInfoResult]]):
-    pass
+SiteAndDeviceInfoResponse = ResponseWithTotal[list[SiteAndDeviceInfoResult]]
 
 
 @router.get("/siteAndDeviceInfo")

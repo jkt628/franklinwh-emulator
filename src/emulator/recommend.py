@@ -14,8 +14,7 @@ class RecommendFlagResult(BaseModel):
     recommendImage: str | None = None
 
 
-class RecommendFlagResponse(Response[RecommendFlagResult]):
-    pass
+RecommendFlagResponse = Response[RecommendFlagResult]
 
 
 @router.get("/recommendFlag")

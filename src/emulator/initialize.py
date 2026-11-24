@@ -42,8 +42,7 @@ class PostLoginResult(BaseModel):
     version: str = "1.0.0"
 
 
-class PostLoginResponse(ResponseWithTotal[PostLoginResult]):
-    pass
+PostLoginResponse = ResponseWithTotal[PostLoginResult]
 
 
 @router.post("/appUserOrInstallerLogin")
