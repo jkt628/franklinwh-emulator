@@ -205,6 +205,73 @@ async def backupHistorySummary(gatewayId: str) -> BackupHistorySummaryResponse:
     )
 
 
+class GatewaySystemSettingResult(BaseModel):
+    gatewayId: str
+    gridPhaseConSet: int = 0
+    electricSupply: int = 200
+    ratedGridVolt: int = 0
+    ratedGridHz: int = 0
+    offGridFlag: int = 0
+    gridExportEnable: int = 0
+    apowerChPw: int = 20000
+    apowerDishPw: int = 20000
+    apowerNumber: int
+    countryId: int = 2
+    emsDeviceVer: int = 1
+    bsRelyEn: int = 0
+    threePhPvEnb: int = 0
+    mpanGridEnb: int = 0
+    backupSolution: int = 0
+    mainPanelRate: int = 200
+    pcsSetFlag: bool = True
+    rsdEnable: int = 0
+
+
+GatewaySystemSettingResponse = Response[GatewaySystemSettingResult]
+
+
+@router.get("/getGatewaySystemSetting")
+async def getGatewaySystemSetting(
+    user: LoginUser, gatewayId: str
+) -> GatewaySystemSettingResponse:
+    _, gateway = user.site(gatewayId)
+    return GatewaySystemSettingResponse(
+        result=GatewaySystemSettingResult(
+            gatewayId=gatewayId, apowerNumber=len(gateway.aPower)
+        )
+    )
+
+
+class HotSpotResult(BaseModel):
+    id: int
+    gatewayId: str  # "10060005A02X24320195",
+    ssid: str  # "AP_X24320195",
+    password: str  # "A02X24320195"
+
+
+HotSpotResponse = Response[HotSpotResult]
+
+
+@router.get("/getHotSpotInfo/v2")
+async def getHotSpotInfoV2(gatewayId: str) -> HotSpotResponse:
+    return HotSpotResponse(
+        result=HotSpotResult(
+            id=int(gatewayId[-5:]),
+            gatewayId=gatewayId,
+            ssid="AP_" + gatewayId[-9:],
+            password=gatewayId[-12:],
+        )
+    )
+
+
+ShowTipResponse = Response[None]
+
+
+@router.get("/getShowTip")
+async def getShowTip(type: int) -> ShowTipResponse:
+    return ShowTipResponse(result=None)
+
+
 class ChargePowerDetailsResult(BaseModel):
     batterySoc: float = 92.842
     touMinSoc: int = 20
